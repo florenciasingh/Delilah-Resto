@@ -1,0 +1,670 @@
+openapi: 3.0.0
+info:
+  title: Delilah Restó
+  description: API para pedidos de comida deliciosa. Como cliente podras registrarle, ver el listado de nuestros productos y realizar una orden. Los administradores del restaurante tienen la posibilidad de recibir pedidos y actualizarlos.
+  contact:
+    name: Florencia Singh
+    url: https://github.com/florenciasingh/Delilah-Resto
+    email: florencia.singh@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - description: ServidorLocal
+    url: http://localhost:3000
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Users
+  - name: Products
+  - name: Orders
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Inicio de sesión en sistema.
+      operationId: loginUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "phpunit+9ee681febc292e5df687843b6b26848dac2b51bd@coinfirm.com"
+                  description: "username"
+                password:
+                  type: string
+                  format: password
+                  example: "124K8t9iHn!"
+                  description: "Password"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2wiOiJhZG1pbiJ9.szyWg9bna5_uxqh6XyMnS3cS3QCCKa8rV6w0wtYdcoQ"
+                    description: "Token"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /users/all:
+    get:
+      tags:
+        - Users
+      summary: Obtiene el listado de los usuarios.
+      operationId: getUsers
+      security:
+        - bearerAuth: [admin]
+      description: El usuario admin puede obtener los datos de todos los usuarios sino el usuario logueado es el que puede ver su propia información.
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Users"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /users:
+    post:
+      tags:
+        - Users
+      summary: Creación de usuario.
+      operationId: createUser
+      requestBody:
+        description: Creación de Usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Users"
+      responses:
+        201:
+          description: Operación exitosa
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    put:
+      tags:
+        - Users
+      summary: Modificación del usuario.
+      description: Ésta acción la puede realizar el usuario que se encuentre con la sesión iniciada.
+      operationId: updateUser
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      requestBody:
+        description: Modificación de Usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullname:
+                  type: string
+                  example: "Rocío Elgorriaga"
+                email:
+                  type: string
+                  example: "rocio.e@gmail.com"
+                phone:
+                  type: string
+                  example: "5493516456123"
+                address:
+                  type: string
+                  example: "Rosario"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    get:
+      tags:
+        - Users
+      summary: Obetener datos del usuario que inició sesión.
+      operationId: getUserById
+      description: El usuario logueado es el que puede ver su propia información.
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Users"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Listado de todos los productos
+      operationId: getProducts
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Products"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    post:
+      tags:
+        - Products
+      security:
+        - bearerAuth: [admin]
+      summary: Creación de producto.
+      description: El alta de los productos lo realiza el administrador de sistema.
+      operationId: createProduct
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      requestBody:
+        description: Crear objeto de producto
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Hamburguesa vegan"
+                photoUrl:
+                  type: string
+                  example: "https://dummyimage.com/300.png/09f/fff"
+                unitPrice:
+                  type: number
+                  format: double
+                  example: 256.56
+                favorites:
+                  type: boolean
+                  example: 1
+      responses:
+        201:
+          description: Producto creado.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Obtener producto
+      operationId: getProductById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Products"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    put:
+      tags:
+        - Products
+      security:
+        - bearerAuth: [admin]
+      summary: Modificación producto
+      description: La modificación de los productos lo realiza el administrador de sistema.
+      operationId: updateProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Authorization"
+      requestBody:
+        description: Modificación del producto
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Hamburguesa vegan"
+                photoUrl:
+                  type: string
+                  example: "https://dummyimage.com/300.png/09f/fff"
+                unitPrice:
+                  type: number
+                  format: double
+                  example: 256.56
+                favorites:
+                  type: boolean
+                  example: 1
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    delete:
+      tags:
+        - Products
+      security:
+        - bearerAuth: [admin]
+      summary: Eliminar producto
+      description: La modificación de los productos lo realiza el administrador de sistema.
+      operationId: deleteProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /orders/all:
+    get:
+      tags:
+        - Orders
+      summary: Listado de todos los pedidos
+      description: Listar todos los pedidos lo realiza el administrador de sistema.
+      operationId: getAllOrders
+      security:
+        - bearerAuth: [admin]
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "NUEVO"
+                  hora:
+                    type: string
+                    example: "03:59 PM"
+                  orderid:
+                    type: string
+                    example: "#44"
+                  description:
+                    type: string
+                    example: "2xPizzClas 1xHambGour"
+                  amount:
+                    type: number
+                    format: double
+                    example: 2181.38
+                  fullname:
+                    type: string
+                    example: "Sebastian Diaz"
+                  address:
+                    type: string
+                    example: "Córdoba"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Listado de todos los pedidos del usuario que inició al sesión.
+      operationId: getAllOrdersByUser
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "NUEVO"
+                  hora:
+                    type: string
+                    example: "03:59 PM"
+                  orderid:
+                    type: string
+                    example: "#44"
+                  description:
+                    type: string
+                    example: "2xPizzFug 1xHambVeg"
+                  amount:
+                    type: number
+                    format: double
+                    example: 2181.38
+                  fullname:
+                    type: string
+                    example: "Florencia Singh"
+                  address:
+                    type: string
+                    example: "Rosario"
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    post:
+      tags:
+        - Orders
+      summary: Creación de Pedido.
+      operationId: createOrder
+      description: Creación de pedidos por el usuario que inició sesión.
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+      requestBody:
+        description: Crear objeto de pedido
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: double
+                  example: 2181.38
+                payment:
+                  type: string
+                  example: "Efectivo"
+                statusInfo:
+                  type: integer
+                  format: int32
+                  example: 1
+                orderdetails:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      productid:
+                        type: string
+                      quantity:
+                        type: integer
+                        format: int32
+                      unitprice:
+                        type: number
+                        format: double
+                  example:
+                    - productid: "PRO0000001"
+                      quantity: 1
+                      unitprice: 365
+                    - productid: "PRO0000002"
+                      quantity: 3
+                      unitprice: 165
+      responses:
+        201:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+  /orders/{id}:
+    put:
+      tags:
+        - Orders
+      summary: Modificación del estado del Pedido.
+      operationId: updateOrder
+      security:
+        - bearerAuth: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Authorization"
+      requestBody:
+        description: Modificación del estado del pedido
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                statusInfo:
+                  type: integer
+                  format: int32
+                  example: 2
+      responses:
+        201:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+    delete:
+      tags:
+        - Orders
+      security:
+        - bearerAuth: [admin]
+      summary: Eliminar un pedido
+      description: La eliminación de pedidos lo realiza el administrador de sistema.
+      operationId: deleteOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Authorization"
+      responses:
+        200:
+          description: Operación exitosa.
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          description: Error inesperado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+components:
+  schemas:
+    Users:
+      type: object
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+          format: password
+        address:
+          type: string
+        role:
+          type: string
+          enum:
+            - admin
+            - usuario
+    Products:
+      type: object
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        photoUrl:
+          type: string
+        unitPrice:
+          type: number
+          format: double
+        favorites:
+          type: boolean
+    Orders:
+      type: object
+      properties:
+        orderId:
+          type: string
+        orderDate:
+          type: string
+          format: date-time
+        clientInfo:
+          $ref: "#/components/schemas/Users"
+        amount:
+          type: number
+          format: double
+        payment:
+          type: string
+          enum:
+            - Efectivo
+            - Tarjeta de Crédito
+            - Tarjeta de Débito
+        statusInfo:
+          $ref: "#/components/schemas/OrderStatus"
+    OrderStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        color:
+          type: string
+    OrderDetails:
+      type: object
+      properties:
+        orderId:
+          $ref: "#/components/schemas/Orders"
+        productId:
+          $ref: "#/components/schemas/Products"
+        quantity:
+          type: integer
+          format: int32
+        unitPrice:
+          type: number
+          format: double
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+  parameters:
+    Authorization:
+      name: authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "Bearer sYFuat5lz1y5v0LrCt7LfqJpo1AkdLgm7LbY6eRibN4NYw9Srf6aMIRJM8KbTwM6"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
