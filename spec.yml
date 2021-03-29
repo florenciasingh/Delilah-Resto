@@ -657,7 +657,7 @@ components:
           type: string
   parameters:
     Authorization:
-      name: authorization
+      name: security
       in: header
       required: true
       schema:
